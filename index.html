@@ -265,6 +265,22 @@ body{background:var(--paper);font-family:Inter,"Segoe UI",Arial,sans-serif;color
 @media(max-width:960px){.start-grid{grid-template-columns:1fr}.quiz-grid{grid-template-columns:1fr}.sidebox{display:none}}
 @media(max-width:680px){.layout{padding:0 13px 42px}.top-inner{padding:11px 14px}.brand{font-size:.99rem}.brand-logo{width:44px;height:44px;font-size:1.12rem}.bar-note{display:none}.hero{margin:18px 0 17px;padding:25px 20px;flex-direction:column;align-items:stretch;gap:20px;border-left-width:7px}.hero h1{font-size:2.48rem}.hero-tools{justify-content:stretch}.help-btn{width:100%}.panel-pad{padding:22px 20px}.question-panel{padding:25px 19px}.quiz-top{align-items:stretch}.score-cells{width:100%;justify-content:space-between}.stat{flex:1;min-width:0;padding:8px 11px}.match-row{grid-template-columns:1fr;gap:9px}.match-arrow{display:none}.sort-row{grid-template-columns:1fr;gap:7px}.results{grid-template-columns:1fr}.mode{padding:12px}.mode-sub{font-size:.8rem}.help-content{padding:20px}.truefalse .answer-btn{min-height:74px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.mode,.answer-btn{transition:none}}
+
+/* Student answer PDF report - results screen */
+.pdf-export{background:#f1f8f4;border-top:1px solid #d7eadf;padding:24px clamp(17px,5vw,36px) 28px}
+.pdf-export-heading{display:flex;gap:14px;align-items:center;max-width:860px;margin:0 auto 17px;text-align:left}
+.pdf-export-icon{flex:none;display:grid;place-items:center;color:#fff;background:#137d65;border-radius:10px;font-weight:900;font-size:.83rem;letter-spacing:.035em;width:50px;height:52px}
+.pdf-export-heading h3{font-size:1.19rem;font-weight:850;color:#194637;line-height:1.25;margin:0 0 3px}
+.pdf-export-heading p{font-size:.9rem;color:#4c7063;margin:0}
+.pdf-export-fields{display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:860px;margin:auto}
+.pdf-export-fields label{display:grid;text-align:left;gap:6px;font-size:.82rem;font-weight:800;color:#305e52}
+.pdf-export-fields input{background:#fff;width:100%;border-radius:10px;border:2px solid #cbded7;padding:12px 13px;color:#183d34;min-height:48px;font:inherit;font-size:1rem;font-weight:550}
+.pdf-export-fields input:focus-visible{outline:3px solid #8db9e4;outline-offset:1px;border-color:#087965}
+.pdf-export-actions{max-width:860px;margin:17px auto 0;display:flex;align-items:center;flex-wrap:wrap;gap:13px}
+.btn-download{min-width:243px}
+.pdf-helper{font-size:.81rem;color:#527267}
+.pdf-privacy{text-align:left;max-width:860px;margin:14px auto 0;font-size:.77rem;color:#68847a}
+@media(max-width:620px){.pdf-export-fields{grid-template-columns:1fr}.pdf-export-actions{flex-direction:column;align-items:stretch}.pdf-helper{text-align:center}.btn-download{width:100%}}
 </style>
 </head>
 <body>
@@ -422,7 +438,7 @@ sort('Body systems','Classify each system by its main vital function.', ['Nutrit
 const LABELS = {choice:'A · B · C',tf:'True or false',multi:'Choose all',blank:'Complete the sentence',match:'Match the pairs',order:'Put in order',sort:'Classify'};
 const SHORT_HINT = {choice:'Choose one answer.',tf:'Decide whether the statement is true or false.',multi:'More than one answer may be correct.',blank:'Choose the word that completes the sentence.',match:'Choose the correct meaning for every item.',order:'Tap the items in the correct order. Tap an item above to undo.',sort:'Choose a group for every item.'};
 const appEl = document.getElementById('app');
-let state = {screen:'start',questions:[],index:0,selected:null,orderPool:[],answered:false,correct:0,score:0,streak:0,maxStreak:0,results:[],lastMistakes:[],mode:'quick'};
+let state = {screen:'start',questions:[],index:0,selected:null,orderPool:[],answered:false,correct:0,score:0,streak:0,maxStreak:0,results:[],lastMistakes:[],mode:'quick',firstName:'',lastName:''};
 const esc = (str) => String(str).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function shuffled(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pct(n,d){return d?Math.round(100*n/d):0;}
@@ -453,6 +469,148 @@ let helpReturnFocus = null;
 function openHelp(){helpReturnFocus=document.activeElement;const el=document.getElementById('helpOverlay');el.hidden=false;el.querySelector('.help-close').focus();}
 function closeHelp(){const el=document.getElementById('helpOverlay');el.hidden=true;if(helpReturnFocus&&document.contains(helpReturnFocus))helpReturnFocus.focus();}
 function headerHero(){return `<section class="hero"><div class="hero-main"><div class="eyebrow">Unit 1 · Natural Science</div><h1>Living Things</h1><p>Review vital functions, cells, levels of organisation and human body systems through different types of questions.</p></div><div class="hero-tools"><button class="help-btn" onclick="app.openHelp()">? &nbsp; How to play</button></div></section>`;}
+function updateStudentName(field,value){
+  if(field==='first')state.firstName=value.slice(0,65);
+  if(field==='last')state.lastName=value.slice(0,65);
+  const ready=Boolean(state.firstName.trim() && state.lastName.trim());
+  const button=document.getElementById('downloadPdfBtn');
+  if(button)button.disabled=!ready;
+  const label=document.getElementById('pdfHelper');
+  if(label)label.textContent=ready?'Ready to download.':'Both fields are required.';
+}
+
+// Build a selectable-text, multi-page A4 PDF in the browser: no libraries, CDNs or internet.
+function downloadAnswersPdf(){
+  if(state.screen!=='end'||!state.firstName.trim()||!state.lastName.trim())return;
+  const fullName=(state.firstName.trim()+' '+state.lastName.trim()).replace(/\s+/g,' ');
+  const challenge=state.mode==='quick'?'Quick review':state.mode==='standard'?'Full challenge':state.mode==='all'?'All questions':'Review mistakes';
+  const date=new Date().toLocaleDateString('en-GB');
+  const total=state.questions.length;
+  const percent=pct(state.correct,total);
+  const W=595.28, H=841.89, LEFT=43, RIGHT=552, BODY=RIGHT-LEFT;
+  const pages=[];
+  let content=[],cursor=748;
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d');
+  function width(text,size,bold){
+    if(!ctx)return text.length*size*.53;
+    ctx.font=(bold?'bold ':'')+size+'px Arial';return ctx.measureText(text).width;
+  }
+  // WinAnsiEncoding supports Spanish names with accents; normalize other punctuation.
+  function normalise(t){return String(t).normalize('NFC')
+    .replace(/[\u2192\u27F6]/g,' -> ').replace(/[\u2013\u2014]/g,' - ')
+    .replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"')
+    .replace(/[\u2022\u00B7]/g,' - ').replace(/[\u2713\u2714]/g,'Correct')
+    .replace(/[\u2715\u2717]/g,'Incorrect').replace(/\s+/g,' ').trim();}
+  function enc(s){return Array.from(normalise(s)).map(ch=>{
+    const code=ch.charCodeAt(0);
+    if(ch==='('||ch===')'||ch==='\\')return '\\'+ch;
+    if(code>=32 && code<=126)return ch;
+    if(code>=160&&code<=255)return '\\'+code.toString(8).padStart(3,'0');
+    return '?';
+  }).join('');}
+  function cmdLine(x,y,x2,y2,gray='.82'){
+    content.push(gray+' '+gray+' '+gray+' RG .7 w '+x+' '+y+' m '+x2+' '+y2+' l S');
+  }
+  function cmdText(text,x,y,size=9.5,bold=false,color='0.15 0.25 0.27'){
+    content.push('BT /'+(bold?'F2':'F1')+' '+size+' Tf '+color+' rg 1 0 0 1 '+x+' '+y+' Tm ('+enc(text)+') Tj ET');
+  }
+  function wrap(t,size,bold,maxWidth){
+    const words=normalise(t).split(/\s+/); const lines=[]; let line='';
+    for(const word of words){
+      if(!word)continue;
+      const trial=line?line+' '+word:word;
+      if(width(trial,size,bold)<=maxWidth){line=trial;continue;}
+      if(line){lines.push(line);line='';}
+      if(width(word,size,bold)<=maxWidth){line=word;continue;}
+      let fragment='';
+      for(const letter of word){
+        if(fragment && width(fragment+letter,size,bold)>maxWidth){lines.push(fragment);fragment=letter;}
+        else fragment+=letter;
+      }
+      line=fragment;
+    }
+    if(line)lines.push(line);
+    return lines.length?lines:[''];
+  }
+  function startPage(){
+    if(content.length)pages.push(content);
+    content=[];cursor=744;
+    content.push('0.05 0.46 0.37 rg 0 783 '+W+' 59 re f');
+    cmdText('BETA-URREKO  /  NATURAL SCIENCE',LEFT,811,12,true,'1 1 1');
+    cmdText('UNIT 1  -  LIVING THINGS  |  ANSWER REPORT',LEFT,794,9,false,'0.85 0.96 0.91');
+    cmdLine(LEFT,775,RIGHT,775,'.84');
+  }
+  function enough(height){if(cursor-height<80)startPage();}
+  function addText(text,size=9.5,bold=false,color='0.15 0.25 0.27',x=LEFT,indent=0,space=0){
+    const lines=wrap(text,size,bold,BODY-indent);
+    const lineHeight=size*1.42;
+    for(const line of lines){
+      enough(lineHeight+2);
+      cmdText(line,x+indent,cursor,size,bold,color);
+      cursor-=lineHeight;
+    }
+    cursor-=space;
+  }
+  startPage();
+  addText('STUDENT',8.5,true,'0.10 0.47 0.38',LEFT,0,3);
+  addText(fullName,17,true,'0.11 0.25 0.25',LEFT,0,9);
+  addText('Challenge: '+challenge+'   |   Date: '+date,10,false,'0.30 0.41 0.42',LEFT,0,13);
+  enough(69);
+  content.push('0.91 0.97 0.94 rg '+LEFT+' '+(cursor-42)+' '+BODY+' 61 re f');
+  cmdText('RESULT',LEFT+12,cursor-2,9,true,'0.11 0.47 0.36');
+  cmdText(state.correct+' / '+total+' correct  ('+percent+'%)',LEFT+12,cursor-26,16,true,'0.10 0.34 0.29');
+  cmdText(state.score+' points   |   '+(total-state.correct)+' to review',LEFT+290,cursor-26,9,false,'0.28 0.40 0.38');
+  cursor-=88;
+  addText('ALL QUESTIONS AND YOUR ANSWERS',11,true,'0.12 0.36 0.32',LEFT,0,6);
+  state.questions.forEach((q,i)=>{
+    const r=state.results[i];
+    if(!r)return;
+    enough(117);
+    cmdLine(LEFT,cursor+6,RIGHT,cursor+6,'.87');
+    cursor-=10;
+    const title=String(i+1).padStart(2,'0')+'. ['+LABELS[q.type]+'] '+q.prompt;
+    addText(title,10.3,true,'0.12 0.26 0.31',LEFT,0,4);
+    addText('YOUR ANSWER: '+(r.studentAnswer||'No answer'),9.0,false,'0.19 0.33 0.33',LEFT,7,3);
+    addText('CORRECT ANSWER: '+solution(q),9.0,false,'0.17 0.43 0.35',LEFT,7,4);
+    addText((r.correct?'CORRECT':'INCORRECT')+'  |  '+q.topic,8.8,true,r.correct?'0.08 0.49 0.32':'0.70 0.22 0.20',LEFT,7,7);
+  });
+  if(content.length)pages.push(content);
+  const objects=[null];const addObject=t=>(objects.push(t),objects.length-1);
+  const catalogId=addObject('');const pagesId=addObject('');
+  const font1Id=addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  const font2Id=addObject('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const pageIds=[];
+  pages.forEach((page,i)=>{
+    const cmds=[...page];
+    cmds.push('.83 .87 .86 RG .6 w '+LEFT+' 54 m '+RIGHT+' 54 l S');
+    cmds.push('BT /F1 8 Tf .4 .5 .48 rg 1 0 0 1 '+LEFT+' 40 Tm (Beta-Urreko - Living Things) Tj ET');
+    cmds.push('BT /F1 8 Tf .4 .5 .48 rg 1 0 0 1 478 40 Tm (Page '+(i+1)+' of '+pages.length+') Tj ET');
+    const stream=cmds.join('\n')+'\n';
+    const streamId=addObject('<< /Length '+stream.length+' >>\nstream\n'+stream+'endstream');
+    const pageId=addObject('<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 '+font1Id+' 0 R /F2 '+font2Id+' 0 R >> >> /Contents '+streamId+' 0 R >>');
+    pageIds.push(pageId);
+  });
+  objects[catalogId]='<< /Type /Catalog /Pages '+pagesId+' 0 R >>';
+  objects[pagesId]='<< /Type /Pages /Kids ['+pageIds.map(n=>n+' 0 R').join(' ')+'] /Count '+pageIds.length+' >>';
+  const pdf=['%PDF-1.4\n%Beta-Urreko\n'];const offsets=[0];
+  for(let i=1;i<objects.length;i++){
+    offsets.push(pdf.join('').length);
+    pdf.push(i+' 0 obj\n'+objects[i]+'\nendobj\n');
+  }
+  const cross=pdf.join('').length;
+  pdf.push('xref\n0 '+objects.length+'\n0000000000 65535 f \n');
+  for(let i=1;i<objects.length;i++)pdf.push(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+  pdf.push('trailer\n<< /Size '+objects.length+' /Root '+catalogId+' 0 R >>\nstartxref\n'+cross+'\n%%EOF');
+  const file=new Blob([pdf.join('')],{type:'application/pdf'});
+  const url=URL.createObjectURL(file);
+  const link=document.createElement('a');
+  const safeName=fullName.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,75)||'Student';
+  link.href=url;link.download='Beta_Urreko_Living_Things_'+safeName+'.pdf';
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+
 function renderStart(){
   appEl.innerHTML=headerHero()+`<div class="start-grid">
   <section class="panel panel-pad"><div class="section-eyebrow">Choose your game</div><h2>Ready to practise?</h2><p class="subtle">Choose a game to start. Every round includes different topics, immediate feedback and explanations.</p>
@@ -493,8 +651,8 @@ function evaluate(){
   return false;
 }
 function check(){if(state.answered||!isReady())return;
-  const q=qCurrent();const correct=evaluate();state.answered=true;
-  state.results.push({id:q.id,topic:q.topic,type:q.type,correct});
+  const q=qCurrent();const s=state.selected;const correct=evaluate();state.answered=true;
+  state.results.push({id:q.id,topic:q.topic,type:q.type,correct,studentAnswer:formatStudentAnswer(q,s)});
   if(correct){state.correct++;state.streak++;state.maxStreak=Math.max(state.maxStreak,state.streak);state.score+=100+Math.min(50,(state.streak-1)*10);}else{state.streak=0;}
   render();
 }
@@ -511,6 +669,14 @@ function solution(q){
   if(q.type==='match')return q.pairs.map(x=>x.join(' → ')).join(' | ');
   if(q.type==='sort')return q.groups.map(g=>`${g}: ${q.items.filter(x=>x[1]===g).map(x=>x[0]).join(', ')}`).join(' | ');
   return '';
+}
+function formatStudentAnswer(q,s){
+  if(['choice','tf','blank'].includes(q.type))return q.options[s.single] ?? 'No answer';
+  if(q.type==='multi')return s.multi.map(i=>q.options[i]).join(' | ') || 'No answer';
+  if(q.type==='order')return s.order.map(i=>q.items[i]).join(' -> ');
+  if(q.type==='match')return q.pairs.map((p,i)=>p[0]+' -> '+(s.map[i]||'Not selected')).join(' | ');
+  if(q.type==='sort')return q.items.map((p,i)=>p[0]+': '+(s.map[i]||'Not selected')).join(' | ');
+  return 'No answer';
 }
 function choicesHTML(q){const s=state.selected;const isMulti=q.type==='multi';return `<div class="answers ${q.type==='tf'?'truefalse':''}">${q.options.map((opt,i)=>{
   const isSelected=isMulti?s.multi.includes(i):s.single===i;
@@ -550,11 +716,20 @@ function renderEnd(){
   const badge=grade===100?'Perfect score!':grade>=80?'Excellent work!':grade>=60?'Good progress!':'Keep practising!';
   const counts=TOPICS.map(topic=>{const r=state.results.filter(x=>x.topic===topic);return{topic,correct:r.filter(x=>x.correct).length,total:r.length};}).filter(x=>x.total>0);
   const weak=counts.filter(x=>x.correct<x.total).sort((a,b)=>a.correct/a.total-b.correct/b.total);
-  appEl.innerHTML=`<div class="panel" style="margin-top:34px"><div class="end-hero"><div class="end-icon">${grade>=80?'★':'✓'}</div><div class="section-eyebrow">Round complete</div><h2>${badge}</h2><p class="subtle">You finished ${total} questions across ${getTypeCount(state.questions)} activity types.</p><div class="end-score">${grade}%</div><p class="subtle">${state.correct} correct · ${total-state.correct} to review · ${state.score} points · best streak ${state.maxStreak}</p><div class="end-actions"><button class="btn-primary" onclick="app.start('${state.mode}')">Play another round ↻</button>${state.lastMistakes.length?`<button class="btn-ghost" onclick="app.start('review')">Review ${state.lastMistakes.length} mistake(s)</button>`:''}<button class="btn-ghost" onclick="app.home()">Main menu</button></div></div></div>
+  appEl.innerHTML=`<div class="panel" style="margin-top:34px"><div class="end-hero"><div class="end-icon">${grade>=80?'★':'✓'}</div><div class="section-eyebrow">Round complete</div><h2>${badge}</h2><p class="subtle">You finished ${total} questions across ${getTypeCount(state.questions)} activity types.</p><div class="end-score">${grade}%</div><p class="subtle">${state.correct} correct · ${total-state.correct} to review · ${state.score} points · best streak ${state.maxStreak}</p><div class="end-actions"><button class="btn-primary" onclick="app.start('${state.mode}')">Play another round ↻</button>${state.lastMistakes.length?`<button class="btn-ghost" onclick="app.start('review')">Review ${state.lastMistakes.length} mistake(s)</button>`:''}<button class="btn-ghost" onclick="app.home()">Main menu</button></div></div>
+  <div class="pdf-export">
+    <div class="pdf-export-heading"><span class="pdf-export-icon" aria-hidden="true">PDF</span><div><h3>Download your answers</h3><p>Enter your name and surname to save a report with your answers, corrections and final score.</p></div></div>
+    <div class="pdf-export-fields">
+      <label for="studentFirstName">First name<input id="studentFirstName" type="text" placeholder="Your first name" maxlength="65" autocomplete="given-name" value="${esc(state.firstName)}" oninput="app.updateStudentName('first',this.value)"></label>
+      <label for="studentLastName">Surname<input id="studentLastName" type="text" placeholder="Your surname" maxlength="65" autocomplete="family-name" value="${esc(state.lastName)}" oninput="app.updateStudentName('last',this.value)"></label>
+    </div>
+    <div class="pdf-export-actions"><button id="downloadPdfBtn" class="btn-primary btn-download" ${state.firstName.trim()&&state.lastName.trim()?'':'disabled'} onclick="app.downloadAnswersPdf()">↓ Download answers as PDF</button><span class="pdf-helper" id="pdfHelper">${state.firstName.trim()&&state.lastName.trim()?'Ready to download.':'Both fields are required.'}</span></div>
+    <div class="pdf-privacy">Your answers are saved on your device only. No information is sent to a server.</div>
+  </div></div>
   <div class="results"><div class="panel panel-pad"><h2>Results by topic</h2>${counts.map(x=>`<div class="result-item"><span>${esc(x.topic)}</span><b>${x.correct} / ${x.total}</b></div>`).join('')}</div><div class="panel panel-pad"><h2>Your next step</h2>${weak.length?`<p class="end-note">Focus on <strong>${esc(weak.slice(0,2).map(x=>x.topic).join(' and '))}</strong>. Read each explanation and try another round.</p><div class="note-card">The review button lets you retry only the questions you missed.</div>`:`<p class="end-note">You answered every question correctly. Try another round to revise more content and different question formats.</p><div class="note-card">Strong science vocabulary and excellent attention to detail!</div>`}<p style="margin-top:22px" class="subtle">Best result in this mode: <strong>${getBest(state.mode)}%</strong></p></div></div>`;
 }
 function render(){if(state.screen==='start')renderStart();else if(state.screen==='quiz')renderQuiz();else renderEnd();}
-window.app={start,home,openHelp,closeHelp,selectOne,selectMulti,selectPair,orderAdd,orderRemove,check,next};
+window.app={start,home,openHelp,closeHelp,selectOne,selectMulti,selectPair,orderAdd,orderRemove,check,next,updateStudentName,downloadAnswersPdf};
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&!document.getElementById('helpOverlay').hidden){closeHelp();return;}
   if(!document.getElementById('helpOverlay').hidden)return;
