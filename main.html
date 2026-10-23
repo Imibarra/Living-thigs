@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f695c">
+<title>Living Things · Beta-Urreko</title>
+<style>
+  :root {
+    --navy: #142f43; --navy2: #1f4b60; --teal: #177d86; --teal-light:#e2f3f1;
+    --ink: #203443; --muted: #637783; --line: #dbe5e8; --surface: #ffffff;
+    --paper: #f5f8f8; --green: #287b5a; --green-pale:#e8f6ee;
+    --red: #ae4e4b; --red-pale: #fbeeed; --gold:#aa7642;
+    --shadow: 0 18px 55px rgba(25,52,68,.08);
+  }
+  * {box-sizing:border-box}
+  html {scroll-behavior:smooth}
+  body {margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.5}
+  button,select {font:inherit}
+  button {cursor:pointer}
+  button:focus-visible,select:focus-visible {outline:3px solid #2babb6;outline-offset:3px}
+  .layout {max-width:1210px;padding:0 24px 70px;margin:0 auto}
+  .topbar {background:var(--navy);color:#fff}
+  .top-inner {display:flex;align-items:center;justify-content:space-between;gap:15px;max-width:1210px;margin:0 auto;padding:17px 24px}
+  .brand {display:flex;gap:11px;align-items:center;font-size:.91rem;letter-spacing:.1em;font-weight:800;text-transform:uppercase}
+  .brand-logo {display:inline-grid;place-items:center;width:35px;height:35px;border:1px solid #83b1b7;border-radius:11px;color:#ddf7f4;font-size:1.1rem;letter-spacing:0}
+  .bar-right {display:flex;align-items:center;gap:12px}
+  .bar-note {color:#bdd1d6;font-size:.83rem}
+  .hero {background:linear-gradient(122deg,#173b50,#245c67);color:#fff;border-radius:22px;margin:34px 0 23px;padding:37px 43px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .hero:after {content:"";width:270px;height:270px;position:absolute;right:-70px;top:-130px;border-radius:50%;border:45px solid rgba(208,239,239,.08);pointer-events:none}
+  .hero:before {content:"";position:absolute;right:155px;bottom:-90px;width:180px;height:180px;border:1px solid rgba(255,255,255,.1);border-radius:50%;pointer-events:none}
+  .eyebrow {letter-spacing:.16em;text-transform:uppercase;font-weight:750;font-size:.76rem}
+  h1,h2,h3,p {margin-top:0}
+  h1 {font-weight:850;font-size:clamp(2.25rem,4.3vw,3.65rem);letter-spacing:-.055em;line-height:1.09;margin:12px 0 15px}
+  .hero h1 {max-width:700px}
+  .hero p {max-width:690px;color:#d6e8eb;font-size:1.04rem;margin-bottom:0}
+  .hero .eyebrow {color:#bfece6}
+  .section-eyebrow {font-size:.75rem;color:var(--teal);font-weight:850;letter-spacing:.15em;text-transform:uppercase;margin-bottom:11px}
+  .start-grid {display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.85fr);gap:22px}
+  .panel {border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:0 9px 30px rgba(27,57,70,.035)}
+  .panel-pad {padding:27px 29px}
+  .panel h2 {font-size:1.4rem;font-weight:820;letter-spacing:-.025em;margin:0 0 9px}
+  .subtle {color:var(--muted)}
+  .mode-list {display:grid;gap:10px;margin-top:21px}
+  .mode {text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:18px;display:flex;align-items:center;gap:16px;width:100%;transition:transform .15s,border-color .15s,background .15s}
+  .mode:hover {transform:translateY(-1px);border-color:#86b8bd;background:#f4fbfa}
+  .mode-icon {flex:none;display:grid;place-items:center;width:53px;height:53px;border-radius:13px;background:#e4f2f1;color:var(--navy2);font-weight:850;font-size:1.23rem}
+  .mode-title {font-size:1.02rem;font-weight:800;display:block}
+  .mode-sub {color:var(--muted);font-size:.87rem;display:block;margin-top:3px}
+  .mode-arrow {margin-left:auto;font-size:1.5rem;color:var(--teal)}
+  .topic-list {display:grid;gap:15px;margin-top:23px}
+  .topic-row {display:flex;gap:12px;align-items:center;font-size:.95rem}
+  .topic-dot {flex:none;width:10px;height:10px;border-radius:50%;background:#8dc6ca}
+  .topic-row:nth-child(2) .topic-dot {background:#c4aa7a}
+  .topic-row:nth-child(3) .topic-dot {background:#9ac5a5}
+  .topic-row:nth-child(4) .topic-dot {background:#a9a0d3}
+  .topic-row:nth-child(5) .topic-dot {background:#d9aa96}
+  .topic-row:nth-child(6) .topic-dot {background:#9db9df}
+  .note-card {background:#eff7f6;color:#275766;border-radius:12px;padding:15px 17px;margin-top:27px;font-size:.89rem}
+  .footer-note {text-align:center;color:#82929a;font-size:.81rem;margin-top:24px}
+  .quiz-top {display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:28px 0 12px}
+  .back {border:0;background:transparent;color:var(--teal);font-weight:800;padding:7px 0}
+  .score-cells {display:flex;gap:9px;flex-wrap:wrap}
+  .stat {background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 15px;min-width:95px}
+  .stat .v {display:block;font-weight:850;font-size:1.12rem;color:var(--navy)}
+  .stat .k {display:block;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-size:.64rem;font-weight:800}
+  .progress-strip {height:9px;background:#dce8e9;border-radius:99px;overflow:hidden;margin:13px 0 24px}
+  .progress-fill {height:100%;background:linear-gradient(90deg,#237e8a,#58ada7);border-radius:99px;transition:width .2s}
+  .quiz-grid {display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:19px;align-items:start}
+  .question-panel {padding:32px 35px}
+  .q-tags {display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:21px}
+  .chip {display:inline-flex;align-items:center;padding:6px 10px;border-radius:8px;background:#e8f4f3;color:#20757c;font-size:.73rem;font-weight:850;letter-spacing:.025em}
+  .chip.outline {background:#f2f5f6;color:#667983}
+  .question-title {font-size:clamp(1.35rem,2.2vw,1.85rem);line-height:1.27;font-weight:840;letter-spacing:-.035em;margin:0 0 13px}
+  .question-help {font-size:.91rem;color:var(--muted);margin:0 0 21px}
+  .answers {display:grid;gap:10px}
+  .answer-btn {display:flex;align-items:center;text-align:left;gap:14px;border:1.5px solid #dce7e9;background:#fff;border-radius:12px;min-height:65px;width:100%;padding:12px 16px;color:var(--ink);transition:background .15s,border-color .15s}
+  .answer-btn:hover:not(:disabled) {border-color:#91bdc0;background:#f8fcfc}
+  .answer-btn.selected {background:#e7f5f3;border-color:#22929a;box-shadow:inset 0 0 0 1px #22929a}
+  .answer-btn:disabled {cursor:default;opacity:1}
+  .answer-btn.correct-choice {border-color:#3c9b71;background:#e6f5ec}
+  .answer-btn.wrong-choice {border-color:#d18a83;background:#fff0ed}
+  .letter {flex:none;width:33px;height:33px;border-radius:9px;background:#edf2f3;color:#3b6270;display:inline-grid;place-items:center;font-weight:850;font-size:.85rem}
+  .selected .letter {background:#1f8990;color:white}
+  .truefalse {grid-template-columns:1fr 1fr}
+  .truefalse .answer-btn {justify-content:center;text-align:center;min-height:89px;font-size:1.14rem;font-weight:800}
+  .truefalse .letter {display:none}
+  .checkmark {height:23px;width:23px;border:2px solid #99b0b8;border-radius:6px;display:grid;place-items:center;flex:none;color:white}
+  .selected .checkmark {background:#208d92;border-color:#208d92}
+  .match-rows {display:grid;gap:10px}
+  .match-row {display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:center;gap:11px;border:1px solid #e6ecee;border-radius:12px;padding:12px 13px;background:#fafcfc}
+  .match-label {font-weight:780;font-size:.94rem}
+  .match-arrow {color:#9fb5b9;text-align:center;font-size:1.15rem}
+  .match-select {width:100%;min-width:0;border:1px solid #cadbdd;border-radius:9px;background:white;color:var(--ink);padding:11px 10px;font-size:.87rem}
+  .match-row.right {border-color:#92cdb4;background:#f0faf5}
+  .match-row.wrong {border-color:#dcb3ae;background:#fff7f5}
+  .order-zone {background:#f2f7f7;border:1px dashed #98b9bd;border-radius:12px;padding:15px;min-height:105px;margin-bottom:16px}
+  .order-label {font-size:.72rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em;color:#637f87;margin-bottom:13px}
+  .pills {display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .pill {border:1px solid #a8ced0;background:#fff;border-radius:10px;padding:11px 13px;font-size:.94rem;font-weight:750;color:#235666}
+  .pill:hover:not(:disabled) {background:#e1f2f1}
+  .pill:disabled {cursor:default}
+  .pill.used {background:#e2ecec;color:#899a9f;border-color:#e2ecec;opacity:.72}
+  .order-num {color:#60868c;margin-right:6px}
+  .sort-rows {display:grid;gap:11px}
+  .sort-row {display:grid;grid-template-columns:minmax(0,1fr) minmax(145px, .8fr);align-items:center;gap:11px}
+  .sort-term {font-weight:760}
+  .tip {background:#f4f8f8;border:1px solid #e2ebec;border-radius:12px;padding:14px 16px;margin-top:18px;color:#647b86;font-size:.89rem}
+  .actionbar {display:flex;gap:11px;align-items:center;margin-top:27px;flex-wrap:wrap}
+  .btn-primary {border:0;background:#176f7c;color:#fff;font-weight:850;border-radius:11px;padding:14px 23px;min-height:48px;box-shadow:0 5px 12px rgba(24,101,112,.12)}
+  .btn-primary:hover:not(:disabled) {background:#125d69}
+  .btn-primary:disabled {background:#a8c2c5;box-shadow:none;cursor:not-allowed}
+  .btn-ghost {border:1px solid #cbdfe0;background:#fff;color:#396674;border-radius:11px;font-weight:750;padding:12px 19px}
+  .hint {font-size:.79rem;color:#8ca0a7}
+  .feedback {border-radius:12px;padding:16px 19px;margin-top:20px;border:1px solid #bde2cf;background:#eef9f2;color:#275e46}
+  .feedback.incorrect {background:#fff4f0;border-color:#edcac1;color:#85534b}
+  .feedback strong {font-size:1.04rem;display:block;margin-bottom:7px}
+  .feedback p {margin:0;font-size:.94rem}
+  .feedback .solution {margin:5px 0 9px;font-weight:780}
+  .sidebox {padding:23px 22px}
+  .side-heading {font-size:1rem;font-weight:860;margin:0 0 16px}
+  .topic-meter {margin:0 0 17px}
+  .topic-top {display:flex;justify-content:space-between;font-size:.81rem;margin-bottom:6px;gap:10px}
+  .topic-top b {font-weight:730}
+  .topic-top span {color:#799099;white-space:nowrap}
+  .topic-track {height:6px;background:#eaf0f1;border-radius:99px;overflow:hidden}
+  .topic-fill {height:100%;background:#71abae;border-radius:99px}
+  .side-foot {border-top:1px solid var(--line);margin-top:19px;padding-top:16px;font-size:.86rem;color:var(--muted)}
+  .end-hero {text-align:center;padding:39px 24px 25px}
+  .end-icon {width:72px;height:72px;display:grid;place-items:center;border-radius:50%;margin:0 auto 17px;background:#e3f3ed;color:#237b57;font-size:2rem}
+  .end-hero h2 {font-size:2.3rem;letter-spacing:-.04em;margin:0 0 8px}
+  .end-score {font-weight:900;color:var(--navy);font-size:clamp(3.4rem,7vw,5.2rem);letter-spacing:-.08em;line-height:1.15;margin:18px 0 7px}
+  .end-actions {display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:23px 0 30px}
+  .results {display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .results .panel-pad {padding:25px}
+  .result-item {display:flex;gap:10px;justify-content:space-between;align-items:center;border-bottom:1px solid #ebf0f1;padding:11px 0;font-size:.93rem}
+  .result-item:last-child {border-bottom:0}
+  .result-item b {color:var(--navy)}
+  .none {color:var(--muted);font-size:.91rem}
+  .small-cta {border:0;background:transparent;color:var(--teal);font-weight:800;text-decoration:underline;cursor:pointer}
+  .end-note {font-size:.92rem;line-height:1.6;color:var(--muted);margin:0}
+  @media (max-width:960px) {.quiz-grid {grid-template-columns:minmax(0,1fr)}.sidebox {display:none}.start-grid {grid-template-columns:1fr}}
+  @media (max-width:620px) {.layout {padding:0 13px 38px}.top-inner {padding:12px 14px}.brand {font-size:.73rem;letter-spacing:.05em}.bar-note{display:none}.hero{margin:18px 0;padding:28px 24px;border-radius:16px}.panel-pad{padding:21px 19px}.question-panel{padding:24px 19px}.quiz-top{align-items:flex-start}.match-row{grid-template-columns:1fr;gap:5px}.match-arrow{display:none}.match-label{font-size:.88rem}.sort-row{grid-template-columns:1fr;gap:4px}.score-cells{gap:6px}.stat{min-width:80px;padding:7px 10px}.results{grid-template-columns:1fr}.truefalse .answer-btn{min-height:75px}.mode{padding:13px}}
+  @media (prefers-reduced-motion:reduce) {html{scroll-behavior:auto} .mode, .answer-btn {transition:none}}
+
+/* ================================================================
+   BETA-URREKO | Natural Science
+   Solid colour bands, clear cards, green Science identity, large taps.
+   ================================================================ */
+:root {
+ --navy:#162f37; --navy2:#26424b; --teal:#097b6b; --teal-light:#e2f3ee;
+ --ink:#20353c; --muted:#667b80; --line:#d6e2df; --surface:#ffffff;
+ --paper:#f0f4f3; --green:#177b56; --green-pale:#e9f7ef;
+ --red:#aa4b46; --red-pale:#fff0ec;
+ --shadow:0 9px 28px rgba(17,57,50,.055);
+}
+body{background:var(--paper);font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--ink);line-height:1.5}
+.layout{max-width:1240px;padding-bottom:60px}
+.topbar{background:#fff;color:var(--navy);border-bottom:3px solid #d7e9e3;box-shadow:0 3px 10px rgba(17,53,53,.035)}
+.top-inner{max-width:1240px;padding:14px 24px;gap:14px}
+.brand{text-transform:none;letter-spacing:0;gap:12px;font-size:1.08rem;font-weight:850}
+.brand-logo{width:51px;height:51px;border:0;border-radius:13px;background:var(--teal);color:white;font-size:1.3rem;font-weight:900;letter-spacing:-.08em;box-shadow:0 4px 0 #07554b}
+.brand-text{display:flex;flex-direction:column;gap:1px;line-height:1.08}
+.brand-text small{font-size:.68rem;color:#677b7e;font-weight:750;letter-spacing:.13em;text-transform:uppercase}
+.bar-right{gap:12px}
+.bar-note{background:#e8f4ef;border-radius:7px;padding:7px 12px;color:#126450;font-size:.71rem;letter-spacing:.1em;font-weight:900;text-transform:uppercase}
+.hero{background:#dff0e9;color:var(--navy);border:1px solid #c3e2d6;border-left:10px solid var(--teal);box-shadow:none;border-radius:17px;margin:28px 0 20px;padding:34px 39px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+.hero:before{content:none}
+.hero:after{content:none}
+.hero-main{min-width:0;flex:1}
+.hero h1{color:#113e37;font-size:clamp(2.4rem,4.5vw,3.8rem);letter-spacing:-.055em;margin:10px 0 11px}
+.hero p{color:#355d57;font-size:1.01rem;max-width:690px;line-height:1.55}
+.hero .eyebrow{display:inline-block;background:#0c6e5e;color:#fff;padding:7px 12px;border-radius:7px;font-size:.69rem;letter-spacing:.12em}
+.hero-tools{display:flex;align-items:center;justify-content:center;flex:none}
+.help-btn{border:2px solid #0f7c69;border-radius:12px;background:#fff;color:#0d705e;font-weight:850;padding:14px 22px;min-height:53px;white-space:nowrap;box-shadow:0 5px 0 rgba(13,112,94,.14)}
+.help-btn:hover{background:#f2fcf7;transform:translateY(-1px)}
+.section-eyebrow{display:inline-flex;align-items:center;color:#fff;background:var(--teal);border-radius:7px;padding:7px 11px;letter-spacing:.075em;font-size:.72rem;margin-bottom:13px}
+.panel{border-color:#d6e4df;border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.panel-pad{padding:26px 28px}
+.panel h2{color:var(--navy);font-size:1.41rem}
+.start-grid{grid-template-columns:minmax(0,1.37fr) minmax(300px,.82fr);gap:18px}
+.mode-list{gap:12px;margin-top:20px}
+.mode{min-height:89px;border:2px solid #e1e9e7;border-radius:13px;padding:14px 18px;box-shadow:0 3px 0 rgba(20,70,59,.04)}
+.mode:hover{transform:translateY(-2px);border-color:#0d8470;background:#f3fbf7}
+.mode:focus-visible,.help-btn:focus-visible{outline:3px solid #318fdb;outline-offset:2px}
+.mode-icon{height:56px;width:57px;border-radius:11px;background:#dff2e8;color:#08725d;font-size:1.35rem;box-shadow:inset 0 -3px 0 #c6e8d8}
+.mode:nth-child(2) .mode-icon{background:#e2ecf9;color:#285e9f;box-shadow:inset 0 -3px 0 #cfdef4}
+.mode:nth-child(3) .mode-icon{background:#f1e9fc;color:#685091;box-shadow:inset 0 -3px 0 #e5d7f6}
+.mode-title{font-weight:850;color:#213b41;font-size:1.075rem}
+.mode-sub{font-size:.86rem;color:#6c8183}
+.mode-arrow{font-size:1.6rem;font-weight:750;color:var(--teal)}
+.topic-list{gap:13px;margin-top:20px}
+.topic-row{border-radius:9px;border:1px solid #e8efec;background:#f8fbfa;padding:10px 12px;font-weight:680}
+.topic-dot{width:10px;height:10px;background:#0b886d}
+.topic-row:nth-child(2) .topic-dot{background:#14728f}
+.topic-row:nth-child(3) .topic-dot{background:#5c82b9}
+.topic-row:nth-child(4) .topic-dot{background:#9474b8}
+.topic-row:nth-child(5) .topic-dot{background:#b98246}
+.topic-row:nth-child(6) .topic-dot{background:#ca7770}
+.note-card{background:#e8f5ef;color:#195748;border:1px solid #cfebde;border-left:5px solid var(--teal);border-radius:10px}
+.footer-note{display:none}
+.start-summary{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.summary-pill{font-size:.76rem;font-weight:770;border-radius:7px;background:#edf4f1;color:#2b6657;padding:7px 10px}
+.quiz-top{margin:27px 0 15px}
+.back{color:#0b7564;background:#e8f4ee;border:1px solid #cde6db;padding:10px 14px;border-radius:10px;font-weight:850}
+.back:hover{background:#dcefe7}
+.stat{border:1px solid #d6e4dd;box-shadow:0 3px 0 #e1eae6;padding:9px 17px}
+.stat .v{color:#0c705e;font-size:1.2rem}
+.stat .k{color:#6b8280}
+.progress-strip{height:11px;background:#dce9e3;border-radius:9px;margin:18px 0 25px}
+.progress-fill{background:#0d8672;border-radius:9px}
+.quiz-grid{grid-template-columns:minmax(0,1fr) 290px;gap:18px}
+.question-panel{padding:31px 35px;border-top:7px solid var(--teal)}
+.q-tags{margin-bottom:22px}
+.chip{border-radius:7px;background:#0b806a;color:white;font-size:.75rem;padding:7px 12px;font-weight:870}
+.chip.outline{background:#e8efed;color:#496769}
+.question-title{font-size:clamp(1.42rem,2.2vw,1.96rem);color:#163640;letter-spacing:-.025em;margin-bottom:14px}
+.question-help{color:#52746d;background:#edf7f3;border-radius:8px;padding:11px 14px;margin-bottom:22px;font-weight:650}
+.answers{gap:11px}
+.answer-btn{border:2px solid #dfebe5;border-radius:12px;padding:14px 18px;min-height:69px;gap:15px;font-weight:670;background:#fff}
+.answer-btn:hover:not(:disabled){border-color:#4eb098;background:#f4fbf8}
+.answer-btn.selected{background:#e3f5ed;border-color:#168c70;box-shadow:inset 0 0 0 1px #168c70}
+.answer-btn.correct-choice{border-color:#339a6b;background:#e6f7ee}
+.answer-btn.wrong-choice{border-color:#c66b67;background:#fff0ed}
+.letter{background:#e9f3ee;color:#1a705e;border-radius:9px;width:38px;height:38px;font-size:1rem}
+.selected .letter{background:#0f806a;color:white}
+.checkmark{border-color:#9bbeb1}
+.selected .checkmark{background:#0d8069;border-color:#0d8069}
+.match-row{background:#f7fbf9;border-color:#e3eeea;padding:14px}
+.match-select{border:2px solid #d6e6df;min-height:48px;font-weight:650}
+.match-select:focus{border-color:#19856e}
+.order-zone{background:#f1f8f4;border-color:#95cdbc}
+.pill{border:2px solid #a4d4c4;color:#0b5e52;background:#fff;padding:12px 14px;font-weight:750}
+.pill:hover:not(:disabled){background:#e0f3ea}
+.pill.used{border-color:#e0eae6;background:#ecf1ef}
+.tip{background:#f3f9f6}
+.btn-primary{background:#117b67;border-radius:11px;box-shadow:0 4px 0 #0c594b;min-height:52px;font-weight:850;font-size:.99rem}
+.btn-primary:hover:not(:disabled){background:#0b6b59}
+.btn-primary:disabled{background:#aac9be;box-shadow:none;color:#f5fbf7}
+.btn-ghost{border:2px solid #bfdbce;color:#166a58;min-height:49px;font-weight:840}
+.btn-ghost:hover{background:#f0faf5}
+.feedback{background:#e5f7ec;border-color:#aadfc3;color:#185c3f;border-left:5px solid #299764}
+.feedback.incorrect{background:#fff2ee;border-color:#f0c6bc;color:#874239;border-left-color:#d07460}
+.sidebox{padding:24px 22px;border-top:7px solid #345f66}
+.side-heading{color:#183d42}
+.topic-fill{background:#19866f}
+.side-foot{color:#64817c}
+.end-hero{padding:36px 25px 25px;background:#fafffc;border-bottom:1px solid #e1ece7}
+.end-icon{background:#dcf4e6;color:#177d5b;font-size:2.2rem}
+.end-score{color:#0c7663}
+.result-item b{color:#146b58}
+.small-cta{color:#0c7867}
+.help-overlay[hidden]{display:none}
+.help-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(17,43,39,.59)}
+.help-dialog{position:relative;width:min(100%,640px);max-height:min(86vh,850px);overflow-y:auto;border-radius:17px;background:white;border:2px solid #d5e7de;box-shadow:0 20px 75px rgba(1,33,23,.25)}
+.help-header{background:#0b7663;color:white;padding:21px 25px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.help-header h2{font-size:1.45rem;letter-spacing:-.02em;margin:0;color:white}
+.help-close{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:10px;width:40px;height:40px;font-size:1.3rem;display:grid;place-items:center}
+.help-content{padding:24px 28px 28px}
+.help-content p{margin-bottom:14px;color:#49636a}
+.help-steps{display:grid;gap:10px;padding:0;margin:16px 0 19px;list-style:none}
+.help-steps li{padding:12px 14px;border-radius:9px;background:#f1f8f4;display:flex;gap:12px;align-items:start}
+.help-number{flex:none;display:grid;place-items:center;background:#107b67;color:#fff;width:26px;height:26px;border-radius:7px;font-size:.77rem;font-weight:900}
+.help-content .btn-primary{width:100%}
+@media(max-width:960px){.start-grid{grid-template-columns:1fr}.quiz-grid{grid-template-columns:1fr}.sidebox{display:none}}
+@media(max-width:680px){.layout{padding:0 13px 42px}.top-inner{padding:11px 14px}.brand{font-size:.99rem}.brand-logo{width:44px;height:44px;font-size:1.12rem}.bar-note{display:none}.hero{margin:18px 0 17px;padding:25px 20px;flex-direction:column;align-items:stretch;gap:20px;border-left-width:7px}.hero h1{font-size:2.48rem}.hero-tools{justify-content:stretch}.help-btn{width:100%}.panel-pad{padding:22px 20px}.question-panel{padding:25px 19px}.quiz-top{align-items:stretch}.score-cells{width:100%;justify-content:space-between}.stat{flex:1;min-width:0;padding:8px 11px}.match-row{grid-template-columns:1fr;gap:9px}.match-arrow{display:none}.sort-row{grid-template-columns:1fr;gap:7px}.results{grid-template-columns:1fr}.mode{padding:12px}.mode-sub{font-size:.8rem}.help-content{padding:20px}.truefalse .answer-btn{min-height:74px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.mode,.answer-btn{transition:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="top-inner">
+  <div class="brand"><span class="brand-logo" aria-hidden="true">BU</span><span class="brand-text">Beta-Urreko<small>Unit 1 · Living Things</small></span></div>
+  <div class="bar-right"><span class="bar-note">Natural Science</span></div>
+ </div>
+</header>
+<main id="app" class="layout"></main>
+<div class="help-overlay" id="helpOverlay" hidden onclick="if(event.target===this)app.closeHelp()">
+  <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-header"><h2 id="helpTitle">How to play</h2><button class="help-close" onclick="app.closeHelp()" aria-label="Close instructions">×</button></div>
+    <div class="help-content">
+      <p>Choose a challenge and answer questions about <strong>Living Things</strong>. You can play without a timer.</p>
+      <ol class="help-steps">
+        <li><span class="help-number">1</span><span><strong>Choose your game:</strong> 12, 24 or all the questions. Each round includes different types of activities.</span></li>
+        <li><span class="help-number">2</span><span><strong>Answer in different ways:</strong> A/B/C, true or false, choose all, complete, match, order and classify.</span></li>
+        <li><span class="help-number">3</span><span><strong>Check your answer:</strong> see what is correct and read a short explanation.</span></li>
+        <li><span class="help-number">4</span><span><strong>Keep going:</strong> earn points, follow your progress and review your mistakes at the end.</span></li>
+      </ol>
+      <button class="btn-primary" onclick="app.closeHelp()">Let's play →</button>
+    </div>
+  </section>
+</div>
+<script>
+'use strict';
+const BANK = [];
+const TOPICS = ['Vital functions','Cells & organelles','Animal & plant cells','Specialised cells','Organisation','Body systems'];
+let n = 0;
+function add(type, topic, prompt, data, why) {BANK.push({id:++n,type,topic,prompt,...data,why});}
+const choice=(topic,prompt,options,answer,why)=>add('choice',topic,prompt,{options,answer},why);
+const tf=(topic,prompt,answer,why)=>add('tf',topic,prompt,{options:['True','False'],answer:answer?0:1},why);
+const multi=(topic,prompt,options,answers,why)=>add('multi',topic,prompt,{options,answers},why);
+const blank=(topic,prompt,options,answer,why)=>add('blank',topic,prompt,{options,answer},why);
+const match=(topic,prompt,pairs,why)=>add('match',topic,prompt,{pairs},why);
+const order=(topic,prompt,items,why)=>add('order',topic,prompt,{items},why);
+const sort=(topic,prompt,groups,items,why)=>add('sort',topic,prompt,{groups,items},why);
+
+// The question bank is based on the Unit 1 diagram and the supplied textbook extract.
+// VITAL FUNCTIONS
+choice('Vital functions','Which are the three vital functions of living things?',['Nutrition, interaction and reproduction','Digestion, breathing and sleeping','Growth, movement and circulation'],0,'The three vital functions are nutrition, interaction and reproduction.');
+choice('Vital functions','What happens during nutrition?',['Living things produce offspring','Living things obtain matter and energy','Living things react to changes'],1,'Nutrition allows living things to obtain the matter and energy they need.');
+choice('Vital functions','What is interaction?',['Detecting changes and responding to them','Making new living things','Breaking food into nutrients only'],0,'Interaction means detecting changes and responding.');
+choice('Vital functions','What is reproduction?',['Releasing energy inside cells','Producing new living things','Moving blood around the body'],1,'Reproduction allows living things to produce new living things.');
+choice('Vital functions','A rabbit hears a sound and runs away. Which function is it using?',['Reproduction','Nutrition','Interaction'],2,'Detecting a sound and responding by moving is interaction.');
+tf('Vital functions','Living things carry out three main vital functions.',true,'The three functions are nutrition, interaction and reproduction.');
+tf('Vital functions','Interaction means obtaining matter and energy.',false,'Obtaining matter and energy is nutrition, not interaction.');
+tf('Vital functions','Reproduction means producing new living things.',true,'Reproduction creates new living things.');
+blank('Vital functions','Living things detect changes and respond. This is called ____.',['nutrition','interaction','reproduction'],1,'Detecting and responding to changes is interaction.');
+blank('Vital functions','Obtaining matter and energy is called ____.',['interaction','reproduction','nutrition'],2,'Living things obtain matter and energy through nutrition.');
+match('Vital functions','Match each vital function to its meaning.',[
+ ['Nutrition','Obtain matter and energy'],['Interaction','Detect changes and respond'],['Reproduction','Produce new living things']
+],'Each vital function has a different role.');
+multi('Vital functions','Which of these are vital functions? Select all correct answers.',['Nutrition','Interaction','Photosynthesis','Reproduction'],[0,1,3],'The three main vital functions are nutrition, interaction and reproduction.');
+
+// CELLS & ORGANELLES
+choice('Cells & organelles','What is the smallest living unit?',['An organ','A cell','A tissue'],1,'A cell is the smallest living unit.');
+choice('Cells & organelles','What is a unicellular organism?',['An organism made of one cell','An organism made of many cells','A collection of organs'],0,'Unicellular organisms have one cell.');
+choice('Cells & organelles','What is a multicellular organism?',['An organism without cells','An organism with only one cell','An organism made of many cells'],2,'Multicellular organisms have many cells, often with specialised roles.');
+choice('Cells & organelles','What are organelles?',['Small structures inside cells that do different jobs','Groups of animals in the same habitat','Different organ systems'],0,'Organelles are small structures inside cells that perform different jobs.');
+choice('Cells & organelles','Which cell part controls what enters and leaves?',['Nucleus','Cell membrane','Cytoplasm'],1,'The cell membrane controls what enters and leaves the cell.');
+choice('Cells & organelles','Which cell part controls the cell?',['Nucleus','Cytoplasm','Cell wall'],0,'The nucleus controls the cell.');
+choice('Cells & organelles','What is cytoplasm?',['Jelly-like material where reactions happen','A type of tissue','The outer hard wall of an animal cell'],0,'Cytoplasm is jelly-like material where reactions happen.');
+tf('Cells & organelles','All living things are made of cells.',true,'All living things are made of one or more cells.');
+tf('Cells & organelles','Unicellular organisms have many specialised cells.',false,'Unicellular means one cell.');
+tf('Cells & organelles','The nucleus controls the cell.',true,'The nucleus controls the cell.');
+blank('Cells & organelles','The ____ controls what enters and leaves a cell.',['nucleus','cell membrane','cytoplasm'],1,'The cell membrane regulates what enters and leaves the cell.');
+blank('Cells & organelles','The ____ controls the cell.',['nucleus','cell wall','chloroplasts'],0,'The nucleus is the cell’s control centre.');
+match('Cells & organelles','Match each cell part to its job.',[
+ ['Cell membrane','Controls what enters and leaves'],['Nucleus','Controls the cell'],['Cytoplasm','Where reactions happen']
+],'These are the main parts shared by the animal and plant cells in the diagram.');
+
+// ANIMAL AND PLANT CELLS
+choice('Animal & plant cells','Which part supports and protects a plant cell?',['Cell wall','Nucleus','Cytoplasm'],0,'The cell wall provides support and protection.');
+choice('Animal & plant cells','What do chloroplasts contain?',['Blood','Chlorophyll','Muscle fibres'],1,'Chloroplasts contain chlorophyll and make food using sunlight.');
+choice('Animal & plant cells','What does the large vacuole store?',['Messages','Water and substances','Bones'],1,'The large vacuole stores water and substances.');
+choice('Animal & plant cells','Which of these is in both animal and plant cells?',['Cell wall','Chloroplasts','Cell membrane'],2,'Both animal and plant cells have a cell membrane.');
+tf('Animal & plant cells','Animal cells have chloroplasts.',false,'In this unit, chloroplasts are shown as plant-cell structures.');
+tf('Animal & plant cells','Plant cells have a nucleus and cytoplasm.',true,'Both animal and plant cells have a nucleus and cytoplasm.');
+tf('Animal & plant cells','A cell wall helps support and protect a plant cell.',true,'The plant cell wall provides support and protection.');
+tf('Animal & plant cells','The large vacuole contains chlorophyll.',false,'Chloroplasts contain chlorophyll. The large vacuole stores water and substances.');
+multi('Animal & plant cells','Which parts are found in BOTH cells shown in the unit?',['Cell membrane','Cytoplasm','Chloroplasts','Nucleus','Cell wall'],[0,1,3],'Both cells have a cell membrane, cytoplasm and nucleus.');
+multi('Animal & plant cells','Which parts are highlighted as ONLY PLANT CELL structures in the comparison?',['Cell wall','Chloroplasts','Nucleus','Large vacuole'],[0,1,3],'The unit lists the cell wall, chloroplasts and large vacuole as plant-cell structures.');
+blank('Animal & plant cells','Plant cells have ____ that contain chlorophyll and make food using sunlight.',['cell walls','chloroplasts','nuclei'],1,'Chloroplasts use sunlight to make food.');
+blank('Animal & plant cells','The large ____ stores water and substances.',['vacuole','nucleus','membrane'],0,'The large vacuole stores water and substances.');
+match('Animal & plant cells','Match each plant-cell part to its job.',[
+ ['Cell wall','Supports and protects'],['Chloroplasts','Make food using sunlight'],['Large vacuole','Stores water and substances']
+],'These three structures are highlighted in the plant cell diagram.');
+sort('Animal & plant cells','Classify the structures from the cell comparison.', ['Both cells','Plant cell only'],[
+ ['Cell membrane','Both cells'],['Cytoplasm','Both cells'],['Nucleus','Both cells'],['Cell wall','Plant cell only'],['Chloroplasts','Plant cell only'],['Large vacuole','Plant cell only']
+],'In this comparison, both cells share a membrane, cytoplasm and nucleus; the plant cell also has a cell wall, chloroplasts and a large vacuole.');
+
+// SPECIALISED CELLS
+choice('Specialised cells','Which cells contract to produce movement?',['Epithelial cells','Nerve cells','Muscle cells'],2,'Muscle cells contract and allow movement.');
+choice('Specialised cells','Which cells carry messages around the body?',['Nerve cells','Muscle cells','Epithelial cells'],0,'Nerve cells transmit information around the body.');
+choice('Specialised cells','Which cells cover and protect parts of the body?',['Muscle cells','Epithelial cells','Nerve cells'],1,'Epithelial cells cover and protect surfaces.');
+tf('Specialised cells','Nerve cells transmit information.',true,'Nerve cells establish connections and transmit messages.');
+tf('Specialised cells','Muscle cells are specialised for covering the skin.',false,'Muscle cells contract and produce movement. Epithelial cells cover and protect.');
+tf('Specialised cells','Different cells can have different shapes because they do different jobs.',true,'The shape of specialised cells is related to their function.');
+blank('Specialised cells','____ cells contract and allow muscles to move.',['Nerve','Muscle','Epithelial'],1,'Muscle cells are elongated and contract.');
+blank('Specialised cells','____ cells cover and protect parts of the body.',['Epithelial','Muscle','Nerve'],0,'Epithelial cells cover and protect.');
+match('Specialised cells','Match each specialised cell to its function.',[
+ ['Muscle cell','Contracts to produce movement'],['Epithelial cell','Covers and protects'],['Nerve cell','Transmits information']
+],'Specialised cells have different shapes and jobs.');
+multi('Specialised cells','Which statements about specialised cells are correct?',['Nerve cells transmit messages','Muscle cells contract','Epithelial cells cover and protect','Epithelial cells carry oxygen in blood'],[0,1,2],'The specialised cells shown are nerve, muscle and epithelial cells, each with a different function.');
+
+// ORGANISATION
+choice('Organisation','What do similar cells form when they work together?',['A tissue','An organism','An organ system'],0,'Similar cells form a tissue.');
+choice('Organisation','What forms an organ?',['Different tissues','Only one molecule','Different organ systems'],0,'Different tissues form an organ.');
+choice('Organisation','What is an organ system?',['A single specialised cell','Organs working together','A single tissue'],1,'An organ system is formed by organs working together.');
+choice('Organisation','Which of these is an ORGAN in the example?',['Muscle cell','Heart','Circulatory system'],1,'The heart is the organ in the example.');
+choice('Organisation','What is the final level in the sequence?',['Tissue','Cell','Organism'],2,'Organ systems work together to form an organism.');
+tf('Organisation','Similar cells form a tissue.',true,'A tissue is formed from similar cells.');
+tf('Organisation','The circulatory system is a single cell.',false,'The circulatory system is an organ system.');
+tf('Organisation','The heart is an organ.',true,'Different tissues make up the heart, which is an organ.');
+blank('Organisation','Similar cells form a ____.',['system','tissue','organism'],1,'Similar cells form tissues.');
+blank('Organisation','Different tissues form an ____.',['organ','organism','organelle'],0,'Different tissues form an organ.');
+blank('Organisation','Organs working together form an organ ____.',['cell','system','tissue'],1,'Organs work together in an organ system.');
+order('Organisation','Put the levels of organisation in the correct order, from smallest to largest.', ['Cell','Tissue','Organ','Organ system','Organism'],'The sequence is cell → tissue → organ → organ system → organism.');
+order('Organisation','Put the example in order, from cell to living being.', ['Muscle cell','Muscle tissue','Heart','Circulatory system','Human being'],'The example is muscle cell → muscle tissue → heart → circulatory system → human being.');
+match('Organisation','Match each level to its description.',[
+ ['Cell','Smallest living unit'],['Tissue','A group of similar cells'],['Organ','Different tissues working together'],['Organ system','Organs working together'],['Organism','The complete living thing']
+],'Living things are organised in levels, from cells to organisms.');
+
+// HUMAN BODY SYSTEMS
+choice('Body systems','Which system breaks down food into simpler substances?',['Nervous system','Digestive system','Reproductive system'],1,'The digestive system converts food into substances the body can use.');
+choice('Body systems','Which system takes in oxygen and expels carbon dioxide?',['Respiratory system','Circulatory system','Reproductive system'],0,'The respiratory system takes in oxygen and expels carbon dioxide.');
+choice('Body systems','Which system carries blood around the body?',['Excretory system','Digestive system','Circulatory system'],2,'The circulatory system delivers oxygen and nutrients and collects wastes.');
+choice('Body systems','Which system cleans the blood of waste products?',['Excretory system','Nervous system','Digestive system'],0,'The excretory system removes waste products from the blood.');
+choice('Body systems','Which system gathers information and gives orders?',['Digestive system','Nervous system','Respiratory system'],1,'The nervous system receives information and gives orders.');
+choice('Body systems','Which system allows us to produce offspring?',['Circulatory system','Nervous system','Reproductive system'],2,'The reproductive system allows us to produce offspring.');
+choice('Body systems','Which vital function is associated with the respiratory system?',['Reproduction','Nutrition','Interaction'],1,'The respiratory system is one of the systems involved in nutrition.');
+choice('Body systems','Which vital function is associated with the nervous system?',['Interaction','Reproduction','Nutrition'],0,'The nervous system is involved in interaction.');
+tf('Body systems','The circulatory system delivers oxygen and nutrients around the body.',true,'Blood delivers oxygen and nutrients and carries waste substances.');
+tf('Body systems','The excretory system removes waste products from the blood.',true,'Removing waste products is an excretory system function.');
+tf('Body systems','The nervous system is mainly associated with reproduction in this unit.',false,'The nervous system is associated with interaction.');
+tf('Body systems','The digestive system is associated with nutrition.',true,'The digestive system breaks food down into simpler substances.');
+tf('Body systems','The respiratory system expels oxygen and takes in carbon dioxide.',false,'It takes in oxygen and expels carbon dioxide.');
+blank('Body systems','The ____ system carries blood around the body.',['circulatory','digestive','nervous'],0,'The circulatory system carries oxygen and nutrients around the body.');
+blank('Body systems','The ____ system takes in oxygen from the air.',['respiratory','reproductive','excretory'],0,'The respiratory system takes in oxygen and expels carbon dioxide.');
+blank('Body systems','The ____ system gathers information from the sense organs.',['digestive','nervous','circulatory'],1,'The nervous system gathers information and gives orders.');
+match('Body systems','Match each nutrition system to its function.',[
+ ['Digestive','Breaks down food'],['Respiratory','Takes in oxygen'],['Circulatory','Carries blood'],['Excretory','Removes waste products']
+],'These four systems support the function of nutrition.');
+match('Body systems','Match each system to its main role.',[
+ ['Nervous','Gathers information and gives orders'],['Excretory','Removes waste products'],['Reproductive','Produces offspring']
+],'The nervous system is linked to interaction, the excretory system to nutrition, and the reproductive system to reproduction.');
+multi('Body systems','Which systems are associated with NUTRITION? Select all correct answers.',['Digestive','Respiratory','Circulatory','Excretory','Nervous'],[0,1,2,3],'The unit connects the digestive, respiratory, circulatory and excretory systems with nutrition.');
+multi('Body systems','Which statements about INTERACTION are correct?',['The nervous system collects information','The nervous system gives orders','The reproductive system digests food','The excretory system controls our senses'],[0,1],'The nervous system is involved in interaction: it gathers information and gives orders.');
+sort('Body systems','Classify each system by its main vital function.', ['Nutrition','Interaction','Reproduction'],[
+ ['Digestive system','Nutrition'],['Respiratory system','Nutrition'],['Circulatory system','Nutrition'],['Excretory system','Nutrition'],['Nervous system','Interaction'],['Reproductive system','Reproduction']
+],'Nutrition involves the digestive, respiratory, circulatory and excretory systems; interaction involves the nervous system; reproduction involves the reproductive system.');
+
+const LABELS = {choice:'A · B · C',tf:'True or false',multi:'Choose all',blank:'Complete the sentence',match:'Match the pairs',order:'Put in order',sort:'Classify'};
+const SHORT_HINT = {choice:'Choose one answer.',tf:'Decide whether the statement is true or false.',multi:'More than one answer may be correct.',blank:'Choose the word that completes the sentence.',match:'Choose the correct meaning for every item.',order:'Tap the items in the correct order. Tap an item above to undo.',sort:'Choose a group for every item.'};
+const appEl = document.getElementById('app');
+let state = {screen:'start',questions:[],index:0,selected:null,orderPool:[],answered:false,correct:0,score:0,streak:0,maxStreak:0,results:[],lastMistakes:[],mode:'quick'};
+const esc = (str) => String(str).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function shuffled(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pct(n,d){return d?Math.round(100*n/d):0;}
+function getBest(key){try{return Number(localStorage.getItem('lt_review_best_'+key)||0);}catch(e){return 0;}}
+function saveBest(key,value){try{if(value>getBest(key))localStorage.setItem('lt_review_best_'+key,String(value));}catch(e){}}
+function makeSelection(total) {
+  if(total==='all')return shuffled(BANK);
+  const result=[];const ids=new Set();
+  const insert=q=>{if(q&&!ids.has(q.id)){result.push(q);ids.add(q.id)}};
+  for(const type of shuffled(Object.keys(LABELS)))insert(shuffled(BANK.filter(q=>q.type===type))[0]);
+  for(const topic of shuffled(TOPICS)){
+    if(!result.some(q=>q.topic===topic))insert(shuffled(BANK.filter(q=>q.topic===topic))[0]);
+  }
+  const remaining=shuffled(BANK.filter(q=>!ids.has(q.id)));
+  while(result.length<total&&remaining.length)insert(remaining.pop());
+  return shuffled(result);
+}
+function getTypeCount(qs){return new Set(qs.map(q=>q.type)).size;}
+function start(mode){
+  const qs=mode==='review'?state.lastMistakes.map(id=>BANK.find(q=>q.id===id)).filter(Boolean):makeSelection(mode==='quick'?12:mode==='standard'?24:'all');
+  if(!qs.length)return;
+  state={...state,screen:'quiz',questions:qs,index:0,mode,answered:false,correct:0,score:0,streak:0,maxStreak:0,results:[]};
+  prep();render();window.scrollTo({top:0,behavior:'instant'});
+}
+function prep(){state.selected={single:null,multi:[],map:{},order:[]};state.answered=false;const q=state.questions[state.index];state.orderPool=q.type==='order'?shuffled(q.items.map((term,i)=>({term,i}))):[];}
+function home(){state.screen='start';render();window.scrollTo({top:0,behavior:'instant'});}
+let helpReturnFocus = null;
+function openHelp(){helpReturnFocus=document.activeElement;const el=document.getElementById('helpOverlay');el.hidden=false;el.querySelector('.help-close').focus();}
+function closeHelp(){const el=document.getElementById('helpOverlay');el.hidden=true;if(helpReturnFocus&&document.contains(helpReturnFocus))helpReturnFocus.focus();}
+function headerHero(){return `<section class="hero"><div class="hero-main"><div class="eyebrow">Unit 1 · Natural Science</div><h1>Living Things</h1><p>Review vital functions, cells, levels of organisation and human body systems through different types of questions.</p></div><div class="hero-tools"><button class="help-btn" onclick="app.openHelp()">? &nbsp; How to play</button></div></section>`;}
+function renderStart(){
+  appEl.innerHTML=headerHero()+`<div class="start-grid">
+  <section class="panel panel-pad"><div class="section-eyebrow">Choose your game</div><h2>Ready to practise?</h2><p class="subtle">Choose a game to start. Every round includes different topics, immediate feedback and explanations.</p>
+  <div class="mode-list">
+  <button class="mode" onclick="app.start('quick')"><span class="mode-icon">12</span><span><span class="mode-title">Quick review</span><span class="mode-sub">12 questions · a bit of everything</span></span><span class="mode-arrow" aria-hidden="true">→</span></button>
+  <button class="mode" onclick="app.start('standard')"><span class="mode-icon">24</span><span><span class="mode-title">Full challenge</span><span class="mode-sub">24 questions · mixed activities</span></span><span class="mode-arrow" aria-hidden="true">→</span></button>
+  <button class="mode" onclick="app.start('all')"><span class="mode-icon">∞</span><span><span class="mode-title">All questions</span><span class="mode-sub">${BANK.length} questions · complete review</span></span><span class="mode-arrow" aria-hidden="true">→</span></button>
+  ${state.lastMistakes.length?`<button class="mode" onclick="app.start('review')"><span class="mode-icon">↻</span><span><span class="mode-title">Review my mistakes</span><span class="mode-sub">${state.lastMistakes.length} question(s) to try again</span></span><span class="mode-arrow" aria-hidden="true">→</span></button>`:''}
+  </div></section>
+  <aside class="panel panel-pad"><div class="section-eyebrow">Topics to practise</div><h2>What will you review?</h2>
+  <div class="topic-list">${TOPICS.map(t=>`<div class="topic-row"><span class="topic-dot"></span><span>${esc(t)}</span></div>`).join('')}</div>
+  <div class="note-card"><strong>7 activity types</strong><div style="margin-top:5px">A/B/C, true or false, multiple answers, complete, match, order and classify.</div></div>
+  </aside></div>`;
+}
+function qCurrent(){return state.questions[state.index];}
+function selectOne(index){if(state.answered)return;state.selected.single=index;render();}
+function selectMulti(index){if(state.answered)return;const a=state.selected.multi;state.selected.multi=a.includes(index)?a.filter(x=>x!==index):[...a,index];render();}
+function selectPair(index,value){if(state.answered)return;state.selected.map[index]=value;updateCheck();}
+function orderAdd(i){if(state.answered)return;if(!state.selected.order.includes(i))state.selected.order.push(i);render();}
+function orderRemove(i){if(state.answered)return;state.selected.order=state.selected.order.filter(x=>x!==i);render();}
+function isReady(){
+  const q=qCurrent(); const s=state.selected;
+  if(['choice','tf','blank'].includes(q.type))return s.single!==null;
+  if(q.type==='multi')return s.multi.length>0;
+  if(q.type==='match')return q.pairs.every((p,i)=>s.map[i]!==undefined&&s.map[i]!=='');
+  if(q.type==='sort')return q.items.every((p,i)=>s.map[i]!==undefined&&s.map[i]!=='');
+  if(q.type==='order')return s.order.length===q.items.length;
+  return false;
+}
+function updateCheck(){const b=document.getElementById('checkBtn');if(b)b.disabled=!isReady();}
+function evaluate(){
+  const q=qCurrent();const s=state.selected;
+  if(['choice','tf','blank'].includes(q.type))return s.single===q.answer;
+  if(q.type==='multi')return s.multi.length===q.answers.length&&s.multi.every(i=>q.answers.includes(i));
+  if(q.type==='match')return q.pairs.every((p,i)=>s.map[i]===p[1]);
+  if(q.type==='sort')return q.items.every((p,i)=>s.map[i]===p[1]);
+  if(q.type==='order')return q.items.every((_,i)=>s.order[i]===i);
+  return false;
+}
+function check(){if(state.answered||!isReady())return;
+  const q=qCurrent();const correct=evaluate();state.answered=true;
+  state.results.push({id:q.id,topic:q.topic,type:q.type,correct});
+  if(correct){state.correct++;state.streak++;state.maxStreak=Math.max(state.maxStreak,state.streak);state.score+=100+Math.min(50,(state.streak-1)*10);}else{state.streak=0;}
+  render();
+}
+function next(){if(!state.answered)return;
+  if(state.index===state.questions.length-1){
+    state.lastMistakes=state.results.filter(r=>!r.correct).map(r=>r.id);
+    saveBest(state.mode,pct(state.correct,state.questions.length));state.screen='end';render();window.scrollTo({top:0,behavior:'instant'});
+  }else {state.index++;prep();render();const panel=document.querySelector('.question-panel');if(panel)panel.scrollIntoView({block:'start',behavior:'smooth'});}
+}
+function solution(q){
+  if(['choice','tf','blank'].includes(q.type))return q.options[q.answer];
+  if(q.type==='multi')return q.answers.map(i=>q.options[i]).join(' · ');
+  if(q.type==='order')return q.items.join(' → ');
+  if(q.type==='match')return q.pairs.map(x=>x.join(' → ')).join(' | ');
+  if(q.type==='sort')return q.groups.map(g=>`${g}: ${q.items.filter(x=>x[1]===g).map(x=>x[0]).join(', ')}`).join(' | ');
+  return '';
+}
+function choicesHTML(q){const s=state.selected;const isMulti=q.type==='multi';return `<div class="answers ${q.type==='tf'?'truefalse':''}">${q.options.map((opt,i)=>{
+  const isSelected=isMulti?s.multi.includes(i):s.single===i;
+  const right=isMulti?q.answers.includes(i):i===q.answer;
+  const feedbackClass=state.answered?(right?' correct-choice':isSelected?' wrong-choice':''):'';
+  return `<button type="button" class="answer-btn${isSelected?' selected':''}${feedbackClass}" ${state.answered?'disabled':''} onclick="app.${isMulti?'selectMulti':'selectOne'}(${i})" aria-pressed="${isSelected}">${isMulti?`<span class="checkmark">${isSelected?'✓':''}</span>`:`<span class="letter">${q.type==='tf'?(i===0?'T':'F'):String.fromCharCode(65+i)}</span>`}<span>${esc(opt)}</span></button>`;
+}).join('')}</div>`;}
+function relationsHTML(q,isSort){
+  const rows=isSort?q.items:q.pairs;const options=isSort?q.groups:shuffledUnique(q.pairs.map(p=>p[1]));
+  return `<div class="${isSort?'sort-rows':'match-rows'}">${rows.map(([left,right],i)=>{
+    const selected=state.selected.map[i]||'';
+    const grade=state.answered?(selected===right?' right':' wrong'):'';
+    return `<div class="${isSort?'sort-row':'match-row'}${grade}"><span class="${isSort?'sort-term':'match-label'}">${esc(left)}</span>${isSort?'':'<span class="match-arrow">→</span>'}<select class="match-select" aria-label="Answer for ${esc(left)}" ${state.answered?'disabled':''} onchange="app.selectPair(${i},this.value)"><option value="">Choose...</option>${options.map(o=>`<option value="${esc(o)}" ${o===selected?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+  }).join('')}</div>`;
+}
+function shuffledUnique(a){return [...new Set(a)].sort((x,y)=>x.localeCompare(y));}
+function orderHTML(q){
+  const chosen=state.selected.order;
+  const tray=chosen.length?chosen.map((i,j)=>`<button class="pill" ${state.answered?'disabled':''} onclick="app.orderRemove(${i})"><span class="order-num">${j+1}.</span>${esc(q.items[i])} ${state.answered?'':'×'}</button>`).join(''):'<span class="subtle">Your sequence will appear here.</span>';
+  return `<div class="order-zone"><div class="order-label">Your order · ${chosen.length}/${q.items.length}</div><div class="pills">${tray}</div></div><div class="order-label">Tap to add</div><div class="pills">${state.orderPool.map(it=>`<button class="pill ${chosen.includes(it.i)?'used':''}" ${state.answered||chosen.includes(it.i)?'disabled':''} onclick="app.orderAdd(${it.i})">${esc(it.term)}</button>`).join('')}</div>`;
+}
+function answerHTML(q){if(['choice','tf','multi','blank'].includes(q.type))return choicesHTML(q);if(['match','sort'].includes(q.type))return relationsHTML(q,q.type==='sort');if(q.type==='order')return orderHTML(q);return '';}
+function topicStatsHTML(){return TOPICS.map(t=>{
+  const a=state.results.filter(r=>r.topic===t);const max=state.questions.filter(q=>q.topic===t).length;const done=a.length;
+  return `<div class="topic-meter"><div class="topic-top"><b>${esc(t)}</b><span>${done} / ${max}</span></div><div class="topic-track"><div class="topic-fill" style="width:${pct(done,max)}%"></div></div></div>`;
+}).join('');}
+function renderQuiz(){const q=qCurrent();const step=state.index+1;
+  appEl.innerHTML=`<div class="quiz-top"><button class="back" onclick="app.home()">← Back to menu</button><div class="score-cells"><div class="stat"><span class="v">${step}<span class="subtle">/${state.questions.length}</span></span><span class="k">Question</span></div><div class="stat"><span class="v">${state.score}</span><span class="k">Points</span></div><div class="stat"><span class="v">${state.streak}${state.streak?' ★':''}</span><span class="k">Streak</span></div></div></div>
+    <div class="progress-strip" role="progressbar" aria-label="Quiz progress" aria-valuenow="${state.index+(state.answered?1:0)}" aria-valuemin="0" aria-valuemax="${state.questions.length}"><div class="progress-fill" style="width:${pct(state.index+(state.answered?1:0),state.questions.length)}%"></div></div>
+    <div class="quiz-grid"><section class="panel question-panel"><div class="q-tags"><span class="chip">${esc(LABELS[q.type])}</span><span class="chip outline">${esc(q.topic)}</span></div><h2 class="question-title">${esc(q.prompt)}</h2><p class="question-help">${SHORT_HINT[q.type]}</p>${answerHTML(q)}
+    ${state.answered?`<div class="feedback ${state.results.at(-1).correct?'':'incorrect'}" role="status"><strong>${state.results.at(-1).correct?'✓ Correct!':'Not quite. Keep practising!'}</strong>${state.results.at(-1).correct?'':`<p class="solution">Correct answer: ${esc(solution(q))}</p>`}<p>${esc(q.why)}</p></div>`:''}
+    <div class="actionbar">${state.answered?`<button class="btn-primary" onclick="app.next()">${step===state.questions.length?'See my results':'Next question →'}</button>`:`<button id="checkBtn" class="btn-primary" ${isReady()?'':'disabled'} onclick="app.check()">Check answer</button>`}<span class="hint">${state.answered?'Great effort — keep going.':'No timer. Think carefully!'}</span></div></section>
+    <aside class="panel sidebox"><h3 class="side-heading">Topics in this round</h3>${topicStatsHTML()}<div class="side-foot"><strong>${getTypeCount(state.questions)} activity types</strong> in this challenge.<br>Every question includes an explanation.</div></aside></div>`;
+}
+function renderEnd(){
+  const total=state.questions.length;const grade=pct(state.correct,total);
+  const badge=grade===100?'Perfect score!':grade>=80?'Excellent work!':grade>=60?'Good progress!':'Keep practising!';
+  const counts=TOPICS.map(topic=>{const r=state.results.filter(x=>x.topic===topic);return{topic,correct:r.filter(x=>x.correct).length,total:r.length};}).filter(x=>x.total>0);
+  const weak=counts.filter(x=>x.correct<x.total).sort((a,b)=>a.correct/a.total-b.correct/b.total);
+  appEl.innerHTML=`<div class="panel" style="margin-top:34px"><div class="end-hero"><div class="end-icon">${grade>=80?'★':'✓'}</div><div class="section-eyebrow">Round complete</div><h2>${badge}</h2><p class="subtle">You finished ${total} questions across ${getTypeCount(state.questions)} activity types.</p><div class="end-score">${grade}%</div><p class="subtle">${state.correct} correct · ${total-state.correct} to review · ${state.score} points · best streak ${state.maxStreak}</p><div class="end-actions"><button class="btn-primary" onclick="app.start('${state.mode}')">Play another round ↻</button>${state.lastMistakes.length?`<button class="btn-ghost" onclick="app.start('review')">Review ${state.lastMistakes.length} mistake(s)</button>`:''}<button class="btn-ghost" onclick="app.home()">Main menu</button></div></div></div>
+  <div class="results"><div class="panel panel-pad"><h2>Results by topic</h2>${counts.map(x=>`<div class="result-item"><span>${esc(x.topic)}</span><b>${x.correct} / ${x.total}</b></div>`).join('')}</div><div class="panel panel-pad"><h2>Your next step</h2>${weak.length?`<p class="end-note">Focus on <strong>${esc(weak.slice(0,2).map(x=>x.topic).join(' and '))}</strong>. Read each explanation and try another round.</p><div class="note-card">The review button lets you retry only the questions you missed.</div>`:`<p class="end-note">You answered every question correctly. Try another round to revise more content and different question formats.</p><div class="note-card">Strong science vocabulary and excellent attention to detail!</div>`}<p style="margin-top:22px" class="subtle">Best result in this mode: <strong>${getBest(state.mode)}%</strong></p></div></div>`;
+}
+function render(){if(state.screen==='start')renderStart();else if(state.screen==='quiz')renderQuiz();else renderEnd();}
+window.app={start,home,openHelp,closeHelp,selectOne,selectMulti,selectPair,orderAdd,orderRemove,check,next};
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&!document.getElementById('helpOverlay').hidden){closeHelp();return;}
+  if(!document.getElementById('helpOverlay').hidden)return;
+  if(state.screen!=='quiz'||state.answered&&ev.key!=='Enter')return;
+  if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement?.tagName))return;
+  const q=qCurrent();
+  if(ev.key==='Enter'){ev.preventDefault();if(state.answered)next();else check();}
+  else if(['choice','tf','blank'].includes(q.type)&&/^[1-5]$/.test(ev.key)){const i=Number(ev.key)-1;if(i<q.options.length)selectOne(i);}
+});
+render();
+</script>
+</body>
+</html>
